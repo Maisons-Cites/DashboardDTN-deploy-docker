@@ -1,0 +1,6 @@
+[submodule "DashBoard-DTN-back"]
+	path = DashBoard-DTN-back
+	url = https://github.com/Maisons-Cites/DashBoard-DTN-back.git
+[submodule "DashBoard-DTN-front"]
+	path = DashBoard-DTN-front
+	url = https://github.com/Maisons-Cites/DashBoard-DTN-front.git

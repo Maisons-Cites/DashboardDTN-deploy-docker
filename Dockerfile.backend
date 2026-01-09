@@ -1,0 +1,29 @@
+# Dockerfile.backend
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /build
+COPY DashBoard-DTN-back/. .
+RUN ls -la
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
+RUN echo "Contenu de target après build :" && ls -la target/
+
+# Stage final avec Chrome
+FROM seleniarm/standalone-chromium:latest
+# ou FROM selenium/standalone-chrome:latest pour x86_64
+
+USER root
+
+# Installer Java 21
+RUN apt-get update && apt-get install -y \
+    wget \
+    && wget -O- https://apt.corretto.aws/corretto.key | apt-key add - \
+    && echo "deb https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/corretto.list \
+    && apt-get update \
+    && apt-get install -y java-21-amazon-corretto-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=builder /build/target/*.jar app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

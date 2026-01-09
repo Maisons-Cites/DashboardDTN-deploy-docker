@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: dashboard-backend
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+    container_name: dashboard-frontend
+    restart: unless-stopped
+    expose:
+      - "3000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: dashboard-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"               # Ton app sera sur http://localhost
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
