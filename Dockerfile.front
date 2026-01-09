@@ -1,7 +1,7 @@
 # Dockerfile.front (multi-stage pour Next.js en mode standalone)
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY dashboard-dtn-front/package.json dashboard-dtn-front/package-lock.json ./
+COPY Dashboard-DTN-front/package.json Dashboard-DTN-front/package-lock.json ./
 RUN npm ci
 
 FROM node:22-alpine AS builder
