@@ -4,3 +4,6 @@
 [submodule "DashBoard-DTN-front"]
 	path = DashBoard-DTN-front
 	url = https://github.com/Maisons-Cites/DashBoard-DTN-front.git
+[submodule "dashboard-dtn-front"]
+	path = dashboard-dtn-front
+	url = https://github.com/Maisons-Cites/dashboard-dtn-front.git
