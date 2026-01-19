@@ -3,7 +3,7 @@ version: '3.9'
 services:
   backend:
     build:
-      context: .
+      context: .                     # racine du repo cloné
       dockerfile: Dockerfile.backend
     container_name: dashboard-backend
     restart: unless-stopped
@@ -12,8 +12,9 @@ services:
 
   frontend:
     build:
-      context: .
+      context: .                     # ← crucial : racine complète
       dockerfile: Dockerfile.front
+      target: runner                 # optionnel mais bon : build seulement jusqu'à la stage finale
     container_name: dashboard-frontend
     restart: unless-stopped
     expose:
@@ -24,7 +25,7 @@ services:
     container_name: dashboard-nginx
     restart: unless-stopped
     ports:
-      - "80:80"               # Ton app sera sur http://localhost
+      - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
