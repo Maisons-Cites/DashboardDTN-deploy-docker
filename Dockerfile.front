@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
+
 # ────────────────────────────────────────────────
 # Stage 1 : Installation des dépendances
 # ────────────────────────────────────────────────
 FROM node:22-alpine AS deps
 
-# Ajout des outils nécessaires pour les builds natifs (sharp, swc, etc.)
 RUN apk add --no-cache \
     libc6-compat \
     python3 \
@@ -14,19 +14,15 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Copie seulement les fichiers de lock pour profiter du cache layer
 COPY dashboard-dtn-front/package.json dashboard-dtn-front/package-lock.json* ./
-
-# Installation propre + nettoyage du cache npm
 RUN npm ci --prefer-offline --no-audit --progress=false \
     && npm cache clean --force
 
 # ────────────────────────────────────────────────
-# Stage 2 : Build de l'application
+# Stage 2 : Build
 # ────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 
-# Même dépendances build que deps
 RUN apk add --no-cache \
     libc6-compat \
     python3 \
@@ -35,57 +31,44 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Récupère node_modules de la stage précédente
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copie tout le code source du frontend
 COPY dashboard-dtn-front/ ./
 
-# VÉRIFICATION: Afficher le contenu pour debug
-RUN echo "=== Contenu de /app ===" && ls -la
-RUN echo "=== Vérification next.config.ts ===" && cat next.config.ts || echo "next.config.ts non trouvé!"
+# Debug (optionnel – à retirer en prod si tu veux)
+RUN ls -la && cat next.config.ts || echo "next.config.ts non trouvé"
 
-# Variables d'environnement pour le build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build Next.js (génère .next + le dossier standalone si configuré)
 RUN npm run build
 
-# VÉRIFICATION: Vérifier que le build standalone a bien été créé
-RUN echo "=== Contenu de .next ===" && ls -la .next/
-RUN echo "=== Contenu de .next/standalone ===" && ls -la .next/standalone/ || echo "Standalone non créé!"
+# Debug standalone (optionnel)
+RUN ls -la .next/standalone || echo "Standalone non généré !!"
 
 # ────────────────────────────────────────────────
-# Stage 3 : Image finale très légère (runner)
+# Stage 3 : Image finale légère
 # ────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 
-# Sécurité : utilisateur non-root
-RUN addgroup --system --gid 1001 nodejs \
-    && adduser --system --uid 1001 nextjs
+RUN addgroup -S -g 1001 nodejs \
+    && adduser -S nextjs -u 1001 -G nodejs
 
 WORKDIR /app
 
-# Variables d'environnement recommandées pour Next.js standalone
-ENV PORT=3000 \
-    HOSTNAME="0.0.0.0" \
-    NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
 
-# Copie les fichiers nécessaires depuis le builder
+# Copie exactement ce que standalone attend
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./next.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# IMPORTANT: Copier next.config (peut être nécessaire pour certains rewrites)
-COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./next.config.ts
-
-# On passe sous l'utilisateur non-root
 USER nextjs
 
-# Le port exposé
 EXPOSE 3000
 
-# Lancement (le standalone crée un server.js)
+# Le standalone crée automatiquement un server.js à la racine
 CMD ["node", "server.js"]
