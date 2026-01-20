@@ -9,10 +9,6 @@ services:
     restart: unless-stopped
     expose:
       - "8080"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard-backend.rule=Host(`votre-domaine.com`) && PathPrefix(`/api`)"
-      - "traefik.http.services.dashboard-backend.loadbalancer.server.port=8080"
 
   frontend:
     build:
