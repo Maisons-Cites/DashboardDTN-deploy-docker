@@ -23,9 +23,5 @@ services:
     restart: unless-stopped
     expose:
       - "3000"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard-frontend.rule=Host(`votre-domaine.com`)"
-      - "traefik.http.services.dashboard-frontend.loadbalancer.server.port=3000"
     depends_on:
       - backend
