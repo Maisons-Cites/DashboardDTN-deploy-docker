@@ -7,10 +7,26 @@ services:
       dockerfile: Dockerfile.backend
     container_name: dashboard-backend
     restart: unless-stopped
+    expose:
+      - "8080"
     labels:
+      # Active Traefik pour ce service
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`dashboard-dtn.maisonsetcites.fr`) && PathPrefix(`/api`)"
-      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+
+      # Règle de routage : toutes les requêtes vers /api/* vont ici
+      - "traefik.http.routers.dashboard-backend.rule=Host(`dashboard-dtn.maisonsetcites.fr`) && PathPrefix(`/api`)"
+
+      # Active HTTPS
+      - "traefik.http.routers.dashboard-backend.entrypoints=https"
+      - "traefik.http.routers.dashboard-backend.tls=true"
+      - "traefik.http.routers.dashboard-backend.tls.certresolver=letsencrypt"
+
+      # Port du backend
+      - "traefik.http.services.dashboard-backend.loadbalancer.server.port=8080"
+
+      # Middleware pour strip le prefix /api (OPTIONNEL - voir note ci-dessous)
+      - "traefik.http.middlewares.dashboard-backend-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.dashboard-backend.middlewares=dashboard-backend-stripprefix"
     networks:
       - coolify
 
@@ -21,10 +37,27 @@ services:
       target: runner
     container_name: dashboard-frontend
     restart: unless-stopped
+    expose:
+      - "3000"
+    depends_on:
+      - backend
     labels:
+      # Active Traefik pour ce service
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`dashboard-dtn.maisonsetcites.fr`)"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+      # Règle de routage : toutes les autres requêtes vont au frontend
+      - "traefik.http.routers.dashboard-frontend.rule=Host(`dashboard-dtn.maisonsetcites.fr`)"
+
+      # Priorité plus basse que le backend (le backend capture /api/* en premier)
+      - "traefik.http.routers.dashboard-frontend.priority=1"
+
+      # Active HTTPS
+      - "traefik.http.routers.dashboard-frontend.entrypoints=https"
+      - "traefik.http.routers.dashboard-frontend.tls=true"
+      - "traefik.http.routers.dashboard-frontend.tls.certresolver=letsencrypt"
+
+      # Port du frontend
+      - "traefik.http.services.dashboard-frontend.loadbalancer.server.port=3000"
     networks:
       - coolify
 
