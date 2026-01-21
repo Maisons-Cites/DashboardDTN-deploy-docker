@@ -9,6 +9,8 @@ services:
     restart: unless-stopped
     expose:
       - "8080"
+    networks:
+      - dashboard-network
 
   frontend:
     build:
@@ -21,3 +23,11 @@ services:
       - "3000"
     depends_on:
       - backend
+    networks:
+      - dashboard-network
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8080
+
+networks:
+  dashboard-network:
+    driver: bridge
