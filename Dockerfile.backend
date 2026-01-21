@@ -8,8 +8,8 @@ RUN ./mvnw clean package -DskipTests
 RUN echo "Contenu de target après build :" && ls -la target/
 
 # Stage final avec Chrome
-FROM seleniarm/standalone-chromium:latest
-# ou FROM selenium/standalone-chrome:latest pour x86_64
+FROM selenium/standalone-chromium:latest
+
 
 USER root
 
