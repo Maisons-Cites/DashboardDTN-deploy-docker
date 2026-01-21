@@ -7,10 +7,12 @@ services:
       dockerfile: Dockerfile.backend
     container_name: dashboard-backend
     restart: unless-stopped
-    expose:
-      - "8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`dashboard-dtn.maisonsetcites.fr`) && PathPrefix(`/api`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8080"
     networks:
-      - dashboard-network
+      - coolify
 
   frontend:
     build:
@@ -19,15 +21,13 @@ services:
       target: runner
     container_name: dashboard-frontend
     restart: unless-stopped
-    expose:
-      - "3000"
-    depends_on:
-      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`dashboard-dtn.maisonsetcites.fr`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     networks:
-      - dashboard-network
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://backend:8080
+      - coolify
 
 networks:
-  dashboard-network:
-    driver: bridge
+  coolify:
+    external: true
