@@ -10,15 +10,25 @@ services:
       - "8080"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard-backend.rule=Host(`dashboard-dtn.maisonsetcites.fr`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.dashboard-backend.entrypoints=https"
-      - "traefik.http.routers.dashboard-backend.tls=true"                  # garde ça → active TLS
-      # SUPPRIME ou commente cette ligne :
-      # - "traefik.http.routers.dashboard-backend.tls.certresolver=letsencrypt"
+
+      # PROD
+      - "traefik.http.routers.dashboard-backend-prod.rule=Host(`dashboard-dtn.maisonsetcites.fr`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.dashboard-backend-prod.entrypoints=https"
+      - "traefik.http.routers.dashboard-backend-prod.tls=true"
+
+      # TEST
+      - "traefik.http.routers.dashboard-backend-test.rule=Host(`dashboard-dtn-t.maisonsetcites.fr`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.dashboard-backend-test.entrypoints=https"
+      - "traefik.http.routers.dashboard-backend-test.tls=true"
+
+      # Service commun
       - "traefik.http.services.dashboard-backend.loadbalancer.server.port=8080"
-      # Middleware strip /api (optionnel, mais utile si ton backend n'attend pas /api en préfixe)
+
+      # Strip /api
       - "traefik.http.middlewares.dashboard-backend-stripprefix.stripprefix.prefixes=/api"
-      - "traefik.http.routers.dashboard-backend.middlewares=dashboard-backend-stripprefix@docker"
+      - "traefik.http.routers.dashboard-backend-prod.middlewares=dashboard-backend-stripprefix@docker"
+      - "traefik.http.routers.dashboard-backend-test.middlewares=dashboard-backend-stripprefix@docker"
+
 
   frontend:
     build:
@@ -33,13 +43,20 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard-frontend.rule=Host(`dashboard-dtn.maisonsetcites.fr`)"
-      - "traefik.http.routers.dashboard-frontend.priority=10"              # monte un peu la priorité si besoin (mais 1 est ok, tant que backend capture /api en premier)
-      - "traefik.http.routers.dashboard-frontend.entrypoints=https"
-      - "traefik.http.routers.dashboard-frontend.tls=true"
-      # SUPPRIME ou commente cette ligne :
-      # - "traefik.http.routers.dashboard-frontend.tls.certresolver=letsencrypt"
+
+      # PROD
+      - "traefik.http.routers.dashboard-frontend-prod.rule=Host(`dashboard-dtn.maisonsetcites.fr`)"
+      - "traefik.http.routers.dashboard-frontend-prod.entrypoints=https"
+      - "traefik.http.routers.dashboard-frontend-prod.tls=true"
+
+      # TEST
+      - "traefik.http.routers.dashboard-frontend-test.rule=Host(`dashboard-dtn-t.maisonsetcites.fr`)"
+      - "traefik.http.routers.dashboard-frontend-test.entrypoints=https"
+      - "traefik.http.routers.dashboard-frontend-test.tls=true"
+
+      # Service
       - "traefik.http.services.dashboard-frontend.loadbalancer.server.port=3000"
+
 
 networks:
   coolify:
