@@ -1,9 +1,12 @@
 [submodule "DashBoard-DTN-back"]
 	path = DashBoard-DTN-back
 	url = https://github.com/Maisons-Cites/DashBoard-DTN-back.git
+	branch = test
 [submodule "DashBoard-DTN-front"]
 	path = DashBoard-DTN-front
 	url = https://github.com/Maisons-Cites/DashBoard-DTN-front.git
+	branch = test
 [submodule "dashboard-dtn-front"]
 	path = dashboard-dtn-front
 	url = https://github.com/Maisons-Cites/dashboard-dtn-front.git
+	branch = test

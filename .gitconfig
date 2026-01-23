@@ -1,0 +1,2 @@
+# ~/.gitconfig ou directement dans le terminal
+git config --global alias.sync-subs '!git submodule foreach "git checkout -b $1 2>/dev/null || git checkout $1" && git add . && git commit -m "sync submodules to branch $1"'
